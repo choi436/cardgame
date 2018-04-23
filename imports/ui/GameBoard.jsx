@@ -12,6 +12,10 @@ export default class GameBoard extends Component {
     });
   }*/
 
+  handleBackToGameList() {
+    this.props.backToGameListHandler();
+  }
+
   handleClick(arr, col) {
     if (arr == 1) {
       let game = this.props.game;
@@ -39,7 +43,7 @@ export default class GameBoard extends Component {
       game.onediscard = game.onechose;
       game.onechose = 0;
       game.twodiscard = outgoes;
-      game.twohand.sort();
+      game.twohand.sort(function(a,b) {return a-b});
       Games.update(game._id, {
         $set: {
           twochose: game.twochose,
@@ -201,6 +205,7 @@ export default class GameBoard extends Component {
         </div>
         <div>
           <button type="button" onClick={this.handleDeal.bind(this)} disabled={this.props.game.wait}>Deal</button>
+          <button onClick={this.handleBackToGameList.bind(this)}>Back</button>
         </div>
       </div>
     )
