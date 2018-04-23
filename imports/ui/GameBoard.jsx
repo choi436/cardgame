@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { Meteor } from 'meteor/meteor';
 
 export default class GameBoard extends Component {
 
@@ -33,10 +34,6 @@ export default class GameBoard extends Component {
       } else {
         outgoes = game.twochose;
       }
-      let ri = Math.floor(Math.random() * game.deck.length);
-      game.ontable[0] = game.deck.splice(ri, 1)[0];
-      ri = Math.floor(Math.random() * game.deck.length);
-      game.ontable[1] = game.deck.splice(ri, 1)[0];
       game.twochose = 0;
       game.deck.push(outgoes, game.onechose);
       game.onediscard = game.onechose;
@@ -47,14 +44,30 @@ export default class GameBoard extends Component {
         $set: {
           twochose: game.twochose,
           onechose: game.onechose,
-          ontable: game.ontable,
           deck: game.deck,
           onediscard: game.onediscard,
           twodiscard: game.twodiscard,
-          twohand: game.twohand
+          twohand: game.twohand,
+          wait: false
         }
       });
     }
+  }
+
+  handleDeal() {
+    let game = this.props.game;
+    Games.update(game._id, {
+      $set: {wait: true}
+    });
+    Meteor.setTimeout(function() {
+      let ri = Math.floor(Math.random() * game.deck.length);
+      game.ontable[0] = game.deck.splice(ri, 1)[0];
+      ri = Math.floor(Math.random() * game.deck.length);
+      game.ontable[1] = game.deck.splice(ri, 1)[0];
+      Games.update(game._id, {
+        $set: {ontable: game.ontable}
+      });
+    }, 1000);
   }
 
   /*renderCell(row, col) {
@@ -185,6 +198,9 @@ export default class GameBoard extends Component {
           {this.rcard(8)}
           {this.rcard(9)}
           {this.rcard(10)}
+        </div>
+        <div>
+          <button type="button" onClick={this.handleDeal.bind(this)} disabled={this.props.game.wait}>Deal</button>
         </div>
       </div>
     )

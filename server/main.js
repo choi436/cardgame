@@ -20,7 +20,7 @@ Meteor.startup(() => {
 
   onehand.sort();
   twohand.sort();
-  
+
   let gameDoc = {
     onehand: onehand,
     onechose: 0,
@@ -29,6 +29,7 @@ Meteor.startup(() => {
     twohand: twohand,
     twochose: 0,
     twodiscard: 0,
+    wait: true,
     deck: deck
   };
 
