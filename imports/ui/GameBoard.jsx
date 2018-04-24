@@ -13,14 +13,22 @@ export default class GameBoard extends Component {
   }*/
 
   handleBackToGameList() {
-    this.props.backToGameListHandler();
+    var cb = document.getElementById("areyousure");
+    if (cb.checked) {
+      this.props.backToGameListHandler();
+    }
   }
 
   handleClick(arr, col) {
     if (arr == 1) {
       let game = this.props.game;
-      game.twochose = game.ontable[col];
-      game.onechose = game.ontable[(col+1)%2];
+      if (this.props.game.playerOne.username == this.props.user.username) {
+        game.onechose = game.ontable[col];
+        game.twochose = game.ontable[(col+1)%2];
+      } else {
+        game.twochose = game.ontable[col];
+        game.onechose = game.ontable[(col+1)%2];
+      }
       game.ontable = [0, 0];
       Games.update(game._id, {
         $set: {
@@ -33,45 +41,85 @@ export default class GameBoard extends Component {
       let game = this.props.game;
       let outgoes;
       if (col != 10) {
-        outgoes = game.twohand[col];
-        game.twohand[col] = game.twochose;
-      } else {
-        outgoes = game.twochose;
-      }
-      game.twochose = 0;
-      game.deck.push(outgoes, game.onechose);
-      game.onediscard = game.onechose;
-      game.onechose = 0;
-      game.twodiscard = outgoes;
-      game.twohand.sort(function(a,b) {return a-b});
-      Games.update(game._id, {
-        $set: {
-          twochose: game.twochose,
-          onechose: game.onechose,
-          deck: game.deck,
-          onediscard: game.onediscard,
-          twodiscard: game.twodiscard,
-          twohand: game.twohand,
-          wait: false
+        if (this.props.game.playerOne.username == this.props.user.username) {
+          outgoes = game.onehand[col];
+          game.onehand[col] = game.onechose;
+        } else {
+          outgoes = game.twohand[col];
+          game.twohand[col] = game.twochose;
         }
-      });
+      } else {
+        if (this.props.game.playerOne.username == this.props.user.username) {
+          outgoes = game.onechose;
+        } else {
+          outgoes = game.twochose;
+        }
+      }
+      if (this.props.game.playerOne.username == this.props.user.username) {
+        game.onechose = 0;
+        game.deck.push(outgoes);
+        game.onediscard = outgoes;
+        game.onehand.sort(function(a,b) {return a-b});
+        Games.update(game._id, {
+          $set: {
+            onechose: game.onechose,
+            deck: game.deck,
+            onediscard: game.onediscard,
+            onehand: game.onehand,
+            oneDeal: 0
+          }
+        });
+      } else {
+        game.twochose = 0;
+        game.deck.push(outgoes);
+        game.twodiscard = outgoes;
+        game.twohand.sort(function(a,b) {return a-b});
+        Games.update(game._id, {
+          $set: {
+            twochose: game.twochose,
+            deck: game.deck,
+            twodiscard: game.twodiscard,
+            twohand: game.twohand,
+            twoDeal: 0
+          }
+        });
+      }
     }
   }
 
   handleDeal() {
     let game = this.props.game;
-    Games.update(game._id, {
-      $set: {wait: true}
-    });
-    Meteor.setTimeout(function() {
-      let ri = Math.floor(Math.random() * game.deck.length);
-      game.ontable[0] = game.deck.splice(ri, 1)[0];
-      ri = Math.floor(Math.random() * game.deck.length);
-      game.ontable[1] = game.deck.splice(ri, 1)[0];
+    if (game.playerOne.username == this.props.user.username) {
       Games.update(game._id, {
-        $set: {ontable: game.ontable}
+        $set: {oneDeal: 1}
       });
-    }, 1000);
+      if (game.twoDeal == 1 && game.twochose == 0) {
+        Meteor.setTimeout(function() {
+          let ri = Math.floor(Math.random() * game.deck.length);
+          game.ontable[0] = game.deck.splice(ri, 1)[0];
+          ri = Math.floor(Math.random() * game.deck.length);
+          game.ontable[1] = game.deck.splice(ri, 1)[0];
+          Games.update(game._id, {
+            $set: {ontable: game.ontable, deck: game.deck}
+          });
+        }, 1000);
+      }
+    } else {
+      Games.update(game._id, {
+        $set: {twoDeal: 1}
+      });
+      if (game.oneDeal == 1 && game.onechose == 0) {
+        Meteor.setTimeout(function() {
+          let ri = Math.floor(Math.random() * game.deck.length);
+          game.ontable[0] = game.deck.splice(ri, 1)[0];
+          ri = Math.floor(Math.random() * game.deck.length);
+          game.ontable[1] = game.deck.splice(ri, 1)[0];
+          Games.update(game._id, {
+            $set: {ontable: game.ontable, deck: game.deck}
+          });
+        }, 1000);
+      }
+    }
   }
 
   /*renderCell(row, col) {
@@ -123,11 +171,25 @@ export default class GameBoard extends Component {
     return (<img src=url width="69" height="105" onClick={this.handleClick.bind(this,arr,col)}>);
   }*/
 
-  ropponent() {
-    if (this.props.game.twochose !== 0) {
-      return (<img src="/PNG/card_back.png" width="69" height="105"/>);
+  whochoose() {
+    if (this.props.game.playerOne.username == this.props.user.username) {
+      return this.props.game.onechose;
     }
-    return (<img src="/PNG/0.png" width="69" height="105"/>);
+    return this.props.game.twochose;
+  }
+
+  ropponent() {
+    if (this.props.game.playerOne.username == this.props.user.username) {
+      if (this.props.game.twochose !== 0) {
+        return (<img src="/PNG/card_back.png" width="69" height="105"/>);
+      }
+      return (<img src="/PNG/0.png" width="69" height="105"/>);
+    } else {
+      if (this.props.game.onechose !== 0) {
+        return (<img src="/PNG/card_back.png" width="69" height="105"/>);
+      }
+      return (<img src="/PNG/0.png" width="69" height="105"/>);
+    }
   }
 
   rtable(col) {
@@ -141,9 +203,17 @@ export default class GameBoard extends Component {
   rdiscard(col) {
     var url;
     if (col === 0) {
-      url = "/PNG/" + this.props.game.onediscard + ".png";
+      if (this.props.game.playerTwo.username == this.props.user.username) {
+        url = "/PNG/" + this.props.game.onediscard + ".png";
+      } else {
+        url = "/PNG/" + this.props.game.twodiscard + ".png";
+      }
     } else {
-      url = "/PNG/" + this.props.game.twodiscard + ".png";
+      if (this.props.game.playerTwo.username == this.props.user.username) {
+        url = "/PNG/" + this.props.game.twodiscard + ".png";
+      } else {
+        url = "/PNG/" + this.props.game.onediscard + ".png";
+      }
     }
     return (<img src={url} width="69" height="105"/>);
   }
@@ -151,21 +221,41 @@ export default class GameBoard extends Component {
   rcard(col) {
     var gotten;
     var url;
-    if (this.props.game.twochose === 0) {
+    if (this.whochoose(this) === 0) {
       if (col !== 10) {
-        gotten = this.props.game.twohand[col];
+        if (this.props.game.playerOne.username == this.props.user.username) {
+          gotten = this.props.game.onehand[col];
+        } else {
+          gotten = this.props.game.twohand[col];
+        }
       } else {
         gotten = 0;
       }
       url = "/PNG/" + gotten + ".png";
       return (<img src={url} width="69" height="105"/>);
     } else if (col === 10) {
-      gotten = this.props.game.twochose;
+      if (this.props.game.playerOne.username == this.props.user.username) {
+        gotten = this.props.game.onechose;
+      } else {
+        gotten = this.props.game.twochose;
+      }
     } else {
-      gotten = this.props.game.twohand[col];
+      if (this.props.game.playerOne.username == this.props.user.username) {
+        gotten = this.props.game.onehand[col];
+      } else {
+        gotten = this.props.game.twohand[col];
+      }
     }
     url = "/PNG/" + gotten + ".png";
     return (<img src={url} width="69" height="105" onClick={this.handleClick.bind(this,2,col)}/>);
+  }
+
+  dealbutton() {
+    if (this.props.user.username == this.props.game.playerOne.username) {
+      return (this.props.game.oneDeal == 1);
+    } else {
+      return (this.props.game.twoDeal == 1);
+    }
   }
 
   render() {
@@ -204,8 +294,10 @@ export default class GameBoard extends Component {
           {this.rcard(10)}
         </div>
         <div>
-          <button type="button" onClick={this.handleDeal.bind(this)} disabled={this.props.game.wait}>Deal</button>
-          <button onClick={this.handleBackToGameList.bind(this)}>Back</button>
+          <button type="button" onClick={this.handleDeal.bind(this)} disabled={this.dealbutton()}>Deal</button>
+          <button onClick={this.handleBackToGameList.bind(this)}>Forfeit</button>
+          <input type="checkbox" id="areyousure"/>
+          <label htmlFor="areyousure">Confirm</label>
         </div>
       </div>
     )
