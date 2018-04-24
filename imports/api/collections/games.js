@@ -32,7 +32,8 @@ _.extend(Games, {
       twoDeal: 0,
       deck: deck,
       playerOne: null,
-      playerTwo: null
+      playerTwo: null,
+      winning: 0
     };
     let gameId = Games.insert(gameDoc); // insert a new game document into the collection
     return gameId;

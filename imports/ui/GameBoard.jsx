@@ -12,6 +12,111 @@ export default class GameBoard extends Component {
     });
   }*/
 
+  checkWin(player) {
+    var hand;
+    if (player == 1) {
+      hand = this.props.game.onehand;
+    } else {
+      hand = this.props.game.twohand;
+    }
+    let groups = [];
+    //check for sets
+    for (var i = 1; i < 53; i++) {
+      if (hand.indexOf(i) == -1) continue;
+      var set = [i];
+      var ulimit = Math.ceil(i/4);
+      for (var j = 1; j < 4; j++) {
+        if (Math.ceil((i+j)/4) != ulimit) break;
+        if (hand.indexOf(i+j) != -1) set.push(i+j);
+      }
+      if (set.length >= 3) {
+        for (var k = 0; k < set.length; k++) {
+          hand.splice(hand.indexOf(set[k]), 1);
+        }
+        groups.push(set);
+      }
+    }
+    //check for runs
+    for (var ii = 1; ii < 53; ii++) {
+      if (hand.indexOf(ii) == -1) continue;
+      var run = [ii];
+      var jj = ii + 4;
+      var notfound = false;
+      while (jj < 57 && !notfound) {
+        notfound = false;
+        if (hand.indexOf(jj) == -1 && hand.indexOf(jj % 52) == -1) {
+          for (var kk = 0; kk < groups.length; kk++) {
+            if ((groups[kk].indexOf(jj) != -1 || groups[kk].indexOf(jj % 52) != -1)
+                && groups[kk].length >= 3) {
+              notfound = false;
+              if (jj != 52) {
+                groups[kk].splice(groups[kk].indexOf(jj % 52));
+                run.push(jj % 52);
+              } else {
+                groups[kk].splice(groups[kk].indexOf(52));
+                run.push(52);
+              }
+              break;
+            } else {notfound = true;}
+          }
+        } else {
+          if (jj != 52) {
+            run.push(jj % 52);
+          } else {
+            run.push(52);
+          }
+        }
+        jj += 4;
+      }
+      if (run.length < 3) {
+        jj = ii - 4;
+        notfound = false;
+        while (jj > 0 && !notfound) {
+          notfound = false;
+          for (var kk = 0; kk < groups.length; kk++) {
+            if (groups[kk].indexOf(jj) != -1
+                && groups[kk].length >= 3) {
+              notfound = false;
+              groups[kk].splice(groups[kk].indexOf(jj));
+              run.push(jj);
+              break;
+            } else {notfound = true;}
+          }
+        }
+      }
+      if (run.length >= 3) {
+        for (var k = 0; k < run.length; k++) {
+          hand.splice(hand.indexOf(run[k]), 1);
+        }
+        groups.push(run);
+      }
+    }
+    console.log(hand);
+    if (hand.length == 0) {
+      var winning = [];
+      for (var l = 0; l < groups.length; l++) {
+        for (var ll = 0; ll < groups[l].length; ll++) {
+          winning.push(groups[l][ll]);
+        }
+      }
+      if (player == 1) {
+        Games.update(this.props.game._id, {
+          $set: {
+            onehand: winning,
+            winning: 1
+          }
+        });
+      } else {
+        Games.update(this.props.game._id, {
+          $set: {
+            twohand: winning,
+            winning: 2
+          }
+        });
+      }
+    }
+  }
+
   handleBackToGameList() {
     var cb = document.getElementById("areyousure");
     if (cb.checked) {
@@ -60,6 +165,7 @@ export default class GameBoard extends Component {
         game.deck.push(outgoes);
         game.onediscard = outgoes;
         game.onehand.sort(function(a,b) {return a-b});
+        game.deck.sort(function(a,b) {return a-b});
         Games.update(game._id, {
           $set: {
             onechose: game.onechose,
@@ -69,11 +175,13 @@ export default class GameBoard extends Component {
             oneDeal: 0
           }
         });
+        this.checkWin(1);
       } else {
         game.twochose = 0;
         game.deck.push(outgoes);
         game.twodiscard = outgoes;
         game.twohand.sort(function(a,b) {return a-b});
+        game.deck.sort(function(a,b) {return a-b});
         Games.update(game._id, {
           $set: {
             twochose: game.twochose,
@@ -83,6 +191,7 @@ export default class GameBoard extends Component {
             twoDeal: 0
           }
         });
+        this.checkWin(2);
       }
     }
   }
@@ -250,7 +359,21 @@ export default class GameBoard extends Component {
     return (<img src={url} width="69" height="105" onClick={this.handleClick.bind(this,2,col)}/>);
   }
 
+  rlose(col) {
+    var amione = (this.props.game.playerOne.username == this.props.user.username);
+    if (this.props.game.winning == 1 && !amione) {
+      var url = "/PNG/" + this.props.game.onehand[col] + ".png";
+      return (<img src={url} width="69" height="105"/>);
+    } else if (this.props.game.winning == 2 && amione) {
+      var url = "/PNG/" + this.props.game.twohand[col] + ".png";
+      return (<img src={url} width="69" height="105"/>);
+    } else {
+      return (<img src="/PNG/card_back.png" width="69" height="105"/>);
+    }
+  }
+
   dealbutton() {
+    if (this.props.game.winning != 0) return true;
     if (this.props.user.username == this.props.game.playerOne.username) {
       return (this.props.game.oneDeal == 1);
     } else {
@@ -262,16 +385,16 @@ export default class GameBoard extends Component {
     return (
       <div>
         <div className="theircards">
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
-          <img src="/PNG/card_back.png" width="69" height="105"/>
+          {this.rlose(0)}
+          {this.rlose(1)}
+          {this.rlose(2)}
+          {this.rlose(3)}
+          {this.rlose(4)}
+          {this.rlose(5)}
+          {this.rlose(6)}
+          {this.rlose(7)}
+          {this.rlose(8)}
+          {this.rlose(9)}
           {this.ropponent()}
         </div>
         <div className="ontable">
