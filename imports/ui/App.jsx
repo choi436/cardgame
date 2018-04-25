@@ -17,7 +17,8 @@ class App extends Component {
     this.setState({selectedGameId: gameId});
   }
 
-  handleBackToGameList() {
+  handleBackToGameList(gameId) {
+    Games.leaveGame(gameId, this.props.user);
     this.setState({selectedGameId: null});
   }
 

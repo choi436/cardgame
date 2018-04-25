@@ -5,15 +5,16 @@ import { Meteor } from 'meteor/meteor';
 
 export default class GameList extends Component {
   handleNewGame() {
-    Games.newGame();
+    var gameid = Games.newGame();
+    Games.joinGame(gameid, Meteor.user());
   }
 
   handleLeaveGame(gameId) {
-    Games.leaveGame(gameId, this.props.user);
+    Games.leaveGame(gameId, Meteor.user());
   }
 
   handleJoinGame(gameId) {
-    Games.joinGame(gameId, this.props.user);
+    Games.joinGame(gameId, Meteor.user());
   }
 
   handleEnterGame(gameId) {

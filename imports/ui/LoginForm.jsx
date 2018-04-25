@@ -1,5 +1,7 @@
-import { Random } from 'meteor/random'
+import { Random } from 'meteor/random';
 import React, { Component } from 'react';
+import { Meteor } from 'meteor/meteor';
+import Stats from '../api/collections/stats.js';
 
 export default class LoginForm extends Component {
   constructor(props) {
@@ -22,9 +24,25 @@ export default class LoginForm extends Component {
     e.preventDefault();
     let username = this.state.username.trim();
     if (username === '') return;
+    let password = this.state.password.trim();
+    if (password === '') return;
+    Meteor.loginWithPassword(username, password);
+  }
+
+  register(e) {
+    e.preventDefault();
+    let username = this.state.username.trim();
+    if (username === '') return;
+    let password = this.state.password.trim();
+    if (password === '') return;
     Accounts.createUser({
       username: username,
       password: password
+    }, function(err) {
+      if (err) console.log(err);
+      else {
+        Stats.newPlayer(Meteor.user());
+      }
     });
   }
 
@@ -46,6 +64,7 @@ export default class LoginForm extends Component {
         <input type="text" onChange={this.handlePasswordChange.bind(this)} placeholder="Enter your password"/>
         <br />
         <input type="submit" name="li" value="Login"/>
+        <button onClick={this.register.bind(this)}>Register</button>
         <button onClick={this.handleGuest.bind(this)}>Enter as Guest</button>
       </form>
     )

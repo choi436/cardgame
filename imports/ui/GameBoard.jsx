@@ -81,7 +81,6 @@ export default class GameBoard extends Component {
         groups.push(run);
       }
     }
-    console.log(hand);
     if (hand.length == 0) {
       var winning = [];
       for (var l = 0; l < groups.length; l++) {
@@ -96,6 +95,20 @@ export default class GameBoard extends Component {
             winning: 1
           }
         });
+        if (!this.props.game.playerOne.username.startsWith("guest")) {
+          var newwins = this.props.game.playerOne.profile.wins + 1;
+          var oldloss = this.props.game.playerOne.profile.losses;
+          var newprof = {wins: newwins, losses: oldloss};
+          Meteor.users.update({id: this.props.game.playerOne._id}, {
+            $set: {profile: newprof}});
+        }
+        if (!this.props.game.playerTwo.username.startsWith("guest")) {
+          var newloss = this.props.game.playerTwo.profile.losses + 1;
+          var oldwin = this.props.game.playerTwo.profile.wins;
+          var newprof = {wins: oldwin, losses: newloss};
+          Meteor.users.update({id: this.props.game.playerTwo._id}, {
+            $set: {profile: newprof}});
+        }
       } else {
         Games.update(this.props.game._id, {
           $set: {
@@ -103,6 +116,20 @@ export default class GameBoard extends Component {
             winning: 2
           }
         });
+        if (!this.props.game.playerOne.username.startsWith("guest")) {
+          var newloss = this.props.game.playerOne.profile.losses + 1;
+          var oldwin = this.props.game.playerOne.profile.wins;
+          var newprof = {wins: oldwin, losses: newloss};
+          Meteor.users.update({id: this.props.game.playerOne._id}, {
+            $set: {profile: newprof}});
+        }
+        if (!this.props.game.playerTwo.username.startsWith("guest")) {
+          var newwins = this.props.game.playerTwo.profile.wins + 1;
+          var oldloss = this.props.game.playerTwo.profile.losses;
+          var newprof = {wins: newwins, losses: oldloss};
+          Meteor.users.update({id: this.props.game.playerTwo._id}, {
+            $set: {profile: newprof}});
+        }
       }
     }
   }
@@ -110,7 +137,13 @@ export default class GameBoard extends Component {
   handleBackToGameList() {
     var cb = document.getElementById("areyousure");
     if (cb.checked) {
-      this.props.backToGameListHandler();
+      this.props.backToGameListHandler(this.props.game._id);
+    }
+  }
+
+  didheleave() {
+    if (this.props.game.playerOne == null || this.props.game.playerTwo == null) {
+      return (<p>Your opponent has left the game!</p>);
     }
   }
 
@@ -251,6 +284,9 @@ export default class GameBoard extends Component {
   }
 
   rdiscard(col) {
+    if (this.props.game.playerOne == null || this.props.game.playerTwo == null) {
+      return(<img src="/PNG/0.png" width="69" height="105"/>);
+    }
     var url;
     if (col === 0) {
       if (this.props.game.playerTwo.username == this.props.user.username) {
@@ -297,10 +333,16 @@ export default class GameBoard extends Component {
       }
     }
     url = "/PNG/" + gotten + ".png";
+    if (this.props.game.winning != 0) {
+      return (<img src={url} width="69" height="105"/>);
+    }
     return (<img src={url} width="69" height="105" onClick={this.handleClick.bind(this,2,col)}/>);
   }
 
   rlose(col) {
+    if (this.props.game.playerOne == null || this.props.game.playerTwo == null) {
+      return(<img src="/PNG/0.png" width="69" height="105"/>);
+    }
     var amione = (this.props.game.playerOne.username == this.props.user.username);
     if (this.props.game.winning == 1 && !amione) {
       var url = "/PNG/" + this.props.game.onehand[col] + ".png";
@@ -319,6 +361,16 @@ export default class GameBoard extends Component {
       return (this.props.game.oneDeal == 1);
     } else {
       return (this.props.game.twoDeal == 1);
+    }
+  }
+
+  showWinMsg() {
+    if (this.props.game.winning == 0) return;
+    var amione = (this.props.game.playerOne.username == this.props.user.username);
+    if ((this.props.game.winning == 1 && amione) || (this.props.game.winning == 2 && !amione)) {
+      return (<p>Congratulations, you won!</p>);
+    } else {
+      return (<p>Sorry, your opponent has gone Gin first!</p>);
     }
   }
 
@@ -362,6 +414,10 @@ export default class GameBoard extends Component {
           <button onClick={this.handleBackToGameList.bind(this)}>Forfeit</button>
           <input type="checkbox" id="areyousure"/>
           <label htmlFor="areyousure">Confirm</label>
+        </div>
+        <div>
+          {this.showWinMsg()};
+          {this.didheleave()};
         </div>
       </div>
     )

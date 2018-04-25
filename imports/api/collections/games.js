@@ -63,5 +63,8 @@ _.extend(Games, {
     Games.update(game._id, {
       $set: {playerOne: game.playerOne, playerTwo: game.playerTwo}
     });
+    if (game.playerOne == null && game.playerTwo == null) {
+      Games.remove(game._id);
+    }
   }
 });
