@@ -41,6 +41,14 @@ export default class GameList extends Component {
     }
 
   renderPlayers(game) {
+    if (game.winning != 0) {return (<span>Finished game</span>)}
+    if (game.playerOne != null && game.playerTwo == null) {
+      if (game.playerOne.username == this.props.user.username) {
+        return (<span>Waiting for players...</span>)
+      }
+      var player1 = game.playerOne.username + "\'s"
+      return (<span>{player1} Game</span>)
+    }
     var player1;
     if (game.playerOne != null) player1 = game.playerOne.username;
     else player1 = '';
@@ -58,22 +66,24 @@ export default class GameList extends Component {
         <div>
           <p>You are currently logged in as {this.props.user.username}</p>
           <button onClick={this.handlelogout.bind(this)}>Logout</button>
+          <p>===============================================================</p>
         </div>
         <div>
-          <h1>List of games</h1>
+          <h1>Welcome to Speed Gin Rummy!</h1>
+          <h2>List of rooms</h2>
           {this.props.games.map((game, index) => {
             return (
               <div key={game._id}>
-                <span>Game {index+1}</span>
+                <span>Game {index+1} - </span>
                 {this.renderPlayers(game)}
 
   {/* can leave only if user is in the game, and the game is not started */}
                 {this.myCurrentGameId() === game._id && game.playerTwo == null? (
-                  <button onClick={this.handleLeaveGame.bind(this, game._id)}>Leave</button>
+                  <button onClick={this.handleLeaveGame.bind(this, game._id)}>Abandon</button>
                 ): null}
 
   {/* can join only if user is not in any game, and the game is not started */}
-                {this.myCurrentGameId() === null && game.playerTwo == null? (
+                {this.myCurrentGameId() === null && game.playerTwo == null && game.winning == 0? (
                   <button onClick={this.handleJoinGame.bind(this, game._id)}>Join</button>
                 ): null}
 
@@ -93,7 +103,8 @@ export default class GameList extends Component {
           </div>
         ): null}
         <div>
-          <h2>Rankings</h2>
+          <p>===============================================================</p>
+          <h3>Rankings</h3>
           <ol>
           {Meteor.users.find({username: {$regex: /^(?!guest).*/}}, {sort: {wins: -1}}).map((u) => {
             return (<li key={u._id}>{u.username}: {u.wins}W{u.losses}L</li>);
