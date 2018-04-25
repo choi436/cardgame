@@ -21,6 +21,10 @@ export default class GameList extends Component {
     this.props.enterGameHandler(gameId);
   }
 
+  handlelogout() {
+    Meteor.logout();
+  }
+
   myCurrentGameId() {
       // find game where the user is currently in
       if (Meteor.user() == null) return null;
@@ -51,6 +55,10 @@ export default class GameList extends Component {
     render() {
       return (
       <div>
+        <div>
+          <p>You are currently logged in as {this.props.user.username}</p>
+          <button onClick={this.handlelogout.bind(this)}>Logout</button>
+        </div>
         <div>
           <h1>List of games</h1>
           {this.props.games.map((game, index) => {
@@ -84,6 +92,14 @@ export default class GameList extends Component {
             <button onClick={this.handleNewGame.bind(this)}>New Game</button>
           </div>
         ): null}
+        <div>
+          <h2>Rankings</h2>
+          <ol>
+          {Meteor.users.find({username: {$regex: /^(?!guest).*/}}, {sort: {wins: -1}}).map((u) => {
+            return (<li key={u._id}>{u.username}: {u.wins}W{u.losses}L</li>);
+          })}
+          </ol>
+        </div>
       </div>
       )
     }

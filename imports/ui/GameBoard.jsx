@@ -3,6 +3,7 @@ import { Meteor } from 'meteor/meteor';
 
 export default class GameBoard extends Component {
   checkWin(player) {
+    console.log(this.props.game);
     var hand;
     if (player == 1) {
       hand = this.props.game.onehand;
@@ -28,14 +29,20 @@ export default class GameBoard extends Component {
     }
     //check for runs
     for (var ii = 1; ii < 53; ii++) {
+      console.log("ii: " + ii);
       if (hand.indexOf(ii) == -1) continue;
       var run = [ii];
       var jj = ii + 4;
       var notfound = false;
       while (jj < 57 && !notfound) {
+        console.log("jj: " + jj);
+        console.log(groups);
+        console.log(run);
         notfound = false;
         if (hand.indexOf(jj) == -1 && hand.indexOf(jj % 52) == -1) {
+          if (groups.length == 0) notfound = true;
           for (var kk = 0; kk < groups.length; kk++) {
+            console.log("kk: " + kk);
             if ((groups[kk].indexOf(jj) != -1 || groups[kk].indexOf(jj % 52) != -1)
                 && groups[kk].length >= 3) {
               notfound = false;
@@ -63,6 +70,7 @@ export default class GameBoard extends Component {
         notfound = false;
         while (jj > 0 && !notfound) {
           notfound = false;
+          if (groups.length == 0) notfound = true;
           for (var kk = 0; kk < groups.length; kk++) {
             if (groups[kk].indexOf(jj) != -1
                 && groups[kk].length >= 3) {
@@ -96,18 +104,34 @@ export default class GameBoard extends Component {
           }
         });
         if (!this.props.game.playerOne.username.startsWith("guest")) {
-          var newwins = this.props.game.playerOne.profile.wins + 1;
-          var oldloss = this.props.game.playerOne.profile.losses;
-          var newprof = {wins: newwins, losses: oldloss};
-          Meteor.users.update({id: this.props.game.playerOne._id}, {
-            $set: {profile: newprof}});
+          var wins = this.props.game.playerOne.wins + 1;
+          var losses = this.props.game.playerOne.losses;
+          var id = this.props.game.playerOne.userId;
+          var name = this.props.game.playerOne.username;
+          var newplayer = {
+            userId: id,
+            username: name,
+            wins: wins,
+            losses: losses
+          }
+          Games.update(this.props.game._id, {
+            $set: {playerOne: newplayer}
+          })
         }
         if (!this.props.game.playerTwo.username.startsWith("guest")) {
-          var newloss = this.props.game.playerTwo.profile.losses + 1;
-          var oldwin = this.props.game.playerTwo.profile.wins;
-          var newprof = {wins: oldwin, losses: newloss};
-          Meteor.users.update({id: this.props.game.playerTwo._id}, {
-            $set: {profile: newprof}});
+          var wins = this.props.game.playerTwo.wins;
+          var losses = this.props.game.playerTwo.losses + 1;
+          var id = this.props.game.playerTwo.userId;
+          var name = this.props.game.playerTwo.username;
+          var newplayer = {
+            userId: id,
+            username: name,
+            wins: wins,
+            losses: losses
+          }
+          Games.update(this.props.game._id, {
+            $set: {playerTwo: newplayer}
+          })
         }
       } else {
         Games.update(this.props.game._id, {
@@ -117,18 +141,34 @@ export default class GameBoard extends Component {
           }
         });
         if (!this.props.game.playerOne.username.startsWith("guest")) {
-          var newloss = this.props.game.playerOne.profile.losses + 1;
-          var oldwin = this.props.game.playerOne.profile.wins;
-          var newprof = {wins: oldwin, losses: newloss};
-          Meteor.users.update({id: this.props.game.playerOne._id}, {
-            $set: {profile: newprof}});
+          var wins = this.props.game.playerOne.wins;
+          var losses = this.props.game.playerOne.losses + 1;
+          var id = this.props.game.playerOne.userId;
+          var name = this.props.game.playerOne.username;
+          var newplayer = {
+            userId: id,
+            username: name,
+            wins: wins,
+            losses: losses
+          }
+          Games.update(this.props.game._id, {
+            $set: {playerOne: newplayer}
+          })
         }
         if (!this.props.game.playerTwo.username.startsWith("guest")) {
-          var newwins = this.props.game.playerTwo.profile.wins + 1;
-          var oldloss = this.props.game.playerTwo.profile.losses;
-          var newprof = {wins: newwins, losses: oldloss};
-          Meteor.users.update({id: this.props.game.playerTwo._id}, {
-            $set: {profile: newprof}});
+          var wins = this.props.game.playerTwo.wins + 1;
+          var losses = this.props.game.playerTwo.losses;
+          var id = this.props.game.playerTwo.userId;
+          var name = this.props.game.playerTwo.username;
+          var newplayer = {
+            userId: id,
+            username: name,
+            wins: wins,
+            losses: losses
+          }
+          Games.update(this.props.game._id, {
+            $set: {playerTwo: newplayer}
+          })
         }
       }
     }
@@ -136,6 +176,15 @@ export default class GameBoard extends Component {
 
   handleBackToGameList() {
     var cb = document.getElementById("areyousure");
+    if (this.isthisone()) {
+      Meteor.users.update({_id: this.props.user._id}, {
+        $set: {wins: this.props.game.playerOne.wins, losses: this.props.game.playerOne.losses}
+      })
+    } else {
+      Meteor.users.update({_id: this.props.user._id}, {
+        $set: {wins: this.props.game.playerTwo.wins, losses: this.props.game.playerTwo.losses}
+      })
+    }
     if (cb.checked) {
       this.props.backToGameListHandler(this.props.game._id);
     }
@@ -255,6 +304,8 @@ export default class GameBoard extends Component {
   }
 
   whochoose() {
+    if (this.props.game.playerOne == null) return this.props.game.twochose;
+    if (this.props.game.playerTwo == null) return this.props.game.onechose;
     if (this.props.game.playerOne.username == this.props.user.username) {
       return this.props.game.onechose;
     }
@@ -262,6 +313,9 @@ export default class GameBoard extends Component {
   }
 
   ropponent() {
+    if (this.props.game.playerOne == null || this.props.game.playerTwo == null) {
+      return(<img src="/PNG/0.png" width="69" height="105"/>);
+    }
     if (this.props.game.playerOne.username == this.props.user.username) {
       if (this.props.game.twochose !== 0) {
         return (<img src="/PNG/card_back.png" width="69" height="105"/>);
@@ -304,12 +358,18 @@ export default class GameBoard extends Component {
     return (<img src={url} width="69" height="105"/>);
   }
 
+  isthisone() {
+    if (this.props.game.playerOne == null) return false;
+    if (this.props.game.playerTwo == null) return true;
+    return (this.props.game.playerOne.username == this.props.user.username);
+  }
+
   rcard(col) {
     var gotten;
     var url;
     if (this.whochoose(this) === 0) {
       if (col !== 10) {
-        if (this.props.game.playerOne.username == this.props.user.username) {
+        if (this.isthisone()) {
           gotten = this.props.game.onehand[col];
         } else {
           gotten = this.props.game.twohand[col];
@@ -320,13 +380,13 @@ export default class GameBoard extends Component {
       url = "/PNG/" + gotten + ".png";
       return (<img src={url} width="69" height="105"/>);
     } else if (col === 10) {
-      if (this.props.game.playerOne.username == this.props.user.username) {
+      if (this.isthisone()) {
         gotten = this.props.game.onechose;
       } else {
         gotten = this.props.game.twochose;
       }
     } else {
-      if (this.props.game.playerOne.username == this.props.user.username) {
+      if (this.isthisone()) {
         gotten = this.props.game.onehand[col];
       } else {
         gotten = this.props.game.twohand[col];
@@ -366,8 +426,7 @@ export default class GameBoard extends Component {
 
   showWinMsg() {
     if (this.props.game.winning == 0) return;
-    var amione = (this.props.game.playerOne.username == this.props.user.username);
-    if ((this.props.game.winning == 1 && amione) || (this.props.game.winning == 2 && !amione)) {
+    if ((this.props.game.winning == 1 && this.isthisone()) || (this.props.game.winning == 2 && !this.isthisone())) {
       return (<p>Congratulations, you won!</p>);
     } else {
       return (<p>Sorry, your opponent has gone Gin first!</p>);

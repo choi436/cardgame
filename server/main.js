@@ -7,8 +7,21 @@ Meteor.startup(() => {
 });
 
 Accounts.onCreateUser((options, user) => {
-  if (!user.profile) user.profile = {};
-  user.profile['wins'] = 0;
-  user.profile['losses'] = 0;
+  user['wins'] = 0;
+  user['losses'] = 0;
   return user;
+});
+
+Meteor.publish("allusers", function() {
+  return Meteor.users.find({}, {
+    fields: {
+      wins: 1, losses: 1
+    }
+  });
+});
+
+Meteor.users.allow({
+  update: function(userId, user) {
+    return true;
+  }
 });

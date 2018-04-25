@@ -42,9 +42,19 @@ _.extend(Games, {
   joinGame(gameId, user) {
     let game = Games.findOne(gameId);
     if (game.playerOne == null) {
-      game.playerOne = {userId: user._id, username: user.username};
+      game.playerOne = {
+        userId: user._id,
+        username: user.username,
+        wins: user.wins,
+        losses: user.losses
+      };
     } else if (game.playerTwo == null) {
-      game.playerTwo = {userId: user._id, username: user.username};
+      game.playerTwo = {
+        userId: user._id,
+        username: user.username,
+        wins: user.wins,
+        losses: user.losses
+      };
     } else {
       throw "game is full";
     }
@@ -55,7 +65,9 @@ _.extend(Games, {
 
   leaveGame(gameId, user) {
     let game = Games.findOne(gameId);
-    if (game.playerOne.userId === user._id) {
+    if (game.playerOne == null) game.playerTwo = null;
+    else if (game.playerTwo == null) game.playerOne = null;
+    else if (game.playerOne.userId === user._id) {
       game.playerOne = null;
     } else {
       game.playerTwo = null;
