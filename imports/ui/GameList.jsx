@@ -100,7 +100,9 @@ export default class GameList extends Component {
                 ): null}
 
   {/* can enter only if the game is started */}
-                {game.playerTwo != null && game.ruined == 0? (
+                {game.playerTwo != null && game.ruined == 0 &&
+                  (game.playerOne.username == this.props.user.username ||
+                  game.playerTwo.username == this.props.user.username)? (
                   <button onClick={this.handleEnterGame.bind(this, game._id)}>Enter</button>
                 ): null}
               </div>
