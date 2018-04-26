@@ -3,7 +3,6 @@ import { Meteor } from 'meteor/meteor';
 
 export default class GameBoard extends Component {
   checkWin(player) {
-    console.log(this.props.game);
     var hand;
     if (player == 1) {
       hand = this.props.game.onehand;
@@ -29,20 +28,15 @@ export default class GameBoard extends Component {
     }
     //check for runs
     for (var ii = 1; ii < 53; ii++) {
-      console.log("ii: " + ii);
       if (hand.indexOf(ii) == -1) continue;
       var run = [ii];
       var jj = ii + 4;
       var notfound = false;
       while (jj < 57 && !notfound) {
-        console.log("jj: " + jj);
-        console.log(groups);
-        console.log(run);
         notfound = false;
         if (hand.indexOf(jj) == -1 && hand.indexOf(jj % 52) == -1) {
           if (groups.length == 0) notfound = true;
           for (var kk = 0; kk < groups.length; kk++) {
-            console.log("kk: " + kk);
             if ((groups[kk].indexOf(jj) != -1 || groups[kk].indexOf(jj % 52) != -1)
                 && groups[kk].length >= 3) {
               notfound = false;
@@ -270,35 +264,45 @@ export default class GameBoard extends Component {
 
   handleDeal() {
     let game = this.props.game;
-    if (game.playerOne.username == this.props.user.username) {
+    if (this.isthisone()) {
       Games.update(game._id, {
         $set: {oneDeal: 1}
       });
+      console.log("Player 1 pressed deal");
       if (game.twoDeal == 1 && game.twochose == 0) {
+        console.log("Player 1 deals");
+        Games.update(game._id, {
+          $set: {inprogress: 1}
+        });
         Meteor.setTimeout(function() {
           let ri = Math.floor(Math.random() * game.deck.length);
           game.ontable[0] = game.deck.splice(ri, 1)[0];
           ri = Math.floor(Math.random() * game.deck.length);
           game.ontable[1] = game.deck.splice(ri, 1)[0];
           Games.update(game._id, {
-            $set: {ontable: game.ontable, deck: game.deck}
+            $set: {ontable: game.ontable, deck: game.deck, inprogress: 0}
           });
-        }, 1000);
+        }, Math.floor(Math.random() * 2000) + 1000);
       }
     } else {
       Games.update(game._id, {
         $set: {twoDeal: 1}
       });
+      console.log("Player 2 pressed deal");
       if (game.oneDeal == 1 && game.onechose == 0) {
+        console.log("Player 2 deals");
+        Games.update(game._id, {
+          $set: {inprogress: 1}
+        });
         Meteor.setTimeout(function() {
           let ri = Math.floor(Math.random() * game.deck.length);
           game.ontable[0] = game.deck.splice(ri, 1)[0];
           ri = Math.floor(Math.random() * game.deck.length);
           game.ontable[1] = game.deck.splice(ri, 1)[0];
           Games.update(game._id, {
-            $set: {ontable: game.ontable, deck: game.deck}
+            $set: {ontable: game.ontable, deck: game.deck, inprogress: 0}
           });
-        }, 1000);
+        }, Math.floor(Math.random() * 3000) + 1000);
       }
     }
   }
