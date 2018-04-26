@@ -307,6 +307,7 @@ export default class GameBoard extends Component {
     let game = this.props.game;
     if (game.playerOne == null || game.playerTwo == null) return;
     if (game.oneDeal != 1 || game.twoDeal != 1) return;
+    if (game.onechose != 0 || game.twochose != 0) return;
     if (game.inprogress == 1) return;
     if (game.ontable[0] != 0 && game.ontable[1] != 0) return;
     Games.update(game._id, {
