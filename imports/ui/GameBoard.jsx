@@ -450,9 +450,13 @@ export default class GameBoard extends Component {
           {this.ropponent()}
         </div>
         <div className="ontable">
+          <img src="/PNG/0.png" width="69" height="105"/>
+          <img src="/PNG/0.png" width="69" height="105"/>
           {this.rdiscard(0)}
+          <img src="/PNG/0.png" width="69" height="105"/>
           {this.rtable(0)}
           {this.rtable(1)}
+          <img src="/PNG/0.png" width="69" height="105"/>
           {this.rdiscard(1)}
         </div>
         <div className="mycards">

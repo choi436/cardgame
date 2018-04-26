@@ -25,6 +25,14 @@ export default class GameList extends Component {
     Meteor.logout();
   }
 
+  howtoplay() {
+    document.getElementById("overlay").style.display = "block";
+  }
+
+  hownottoplay() {
+    document.getElementById("overlay").style.display = "none";
+  }
+
   myCurrentGameId() {
       // find game where the user is currently in
       if (Meteor.user() == null) return null;
@@ -63,6 +71,9 @@ export default class GameList extends Component {
     render() {
       return (
       <div>
+        <div id="overlay" onClick={this.hownottoplay.bind(this)}>
+          <img src="/PNG/howtoplay.png" width="784" height="600" onClick={this.hownottoplay.bind(this)}/>
+        </div>
         <div>
           <p>You are currently logged in as {this.props.user.username}</p>
           <button onClick={this.handlelogout.bind(this)}>Logout</button>
@@ -110,6 +121,9 @@ export default class GameList extends Component {
             return (<li key={u._id}>{u.username}: {u.wins}W{u.losses}L</li>);
           })}
           </ol>
+        </div>
+        <div>
+          <button onClick={this.howtoplay.bind(this)}>How to play</button>
         </div>
       </div>
       )
