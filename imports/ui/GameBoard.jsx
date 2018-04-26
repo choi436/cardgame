@@ -308,6 +308,7 @@ export default class GameBoard extends Component {
     if (game.playerOne == null || game.playerTwo == null) return;
     if (game.oneDeal != 1 || game.twoDeal != 1) return;
     if (game.inprogress == 1) return;
+    if (game.ontable.length != 0) return;
     Games.update(game._id, {
       $set: {inprogress: 1}
     });
