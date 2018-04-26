@@ -268,9 +268,7 @@ export default class GameBoard extends Component {
       Games.update(game._id, {
         $set: {oneDeal: 1}
       });
-      console.log("Player 1 pressed deal");
-      if (game.twoDeal == 1 && game.twochose == 0) {
-        console.log("Player 1 deals");
+      if (game.twoDeal == 1 && game.twochose == 0 && game.inprogress == 0) {
         Games.update(game._id, {
           $set: {inprogress: 1}
         });
@@ -282,15 +280,13 @@ export default class GameBoard extends Component {
           Games.update(game._id, {
             $set: {ontable: game.ontable, deck: game.deck, inprogress: 0}
           });
-        }, Math.floor(Math.random() * 2000) + 1000);
+        }, Math.floor(Math.random() * 1000) + 1000);
       }
     } else {
       Games.update(game._id, {
         $set: {twoDeal: 1}
       });
-      console.log("Player 2 pressed deal");
-      if (game.oneDeal == 1 && game.onechose == 0) {
-        console.log("Player 2 deals");
+      if (game.oneDeal == 1 && game.onechose == 0 && game.inprogress == 0) {
         Games.update(game._id, {
           $set: {inprogress: 1}
         });
@@ -302,9 +298,28 @@ export default class GameBoard extends Component {
           Games.update(game._id, {
             $set: {ontable: game.ontable, deck: game.deck, inprogress: 0}
           });
-        }, Math.floor(Math.random() * 3000) + 1000);
+        }, Math.floor(Math.random() * 1000) + 1000);
       }
     }
+  }
+
+  refresh() {
+    let game = this.props.game;
+    if (game.playerOne == null || game.playerTwo == null) return;
+    if (game.oneDeal != 1 || game.twoDeal != 1) return;
+    if (game.inprogress == 1) return;
+    Games.update(game._id, {
+      $set: {inprogress: 1}
+    });
+    Meteor.setTimeout(function() {
+      let ri = Math.floor(Math.random() * game.deck.length);
+      game.ontable[0] = game.deck.splice(ri, 1)[0];
+      ri = Math.floor(Math.random() * game.deck.length);
+      game.ontable[1] = game.deck.splice(ri, 1)[0];
+      Games.update(game._id, {
+        $set: {ontable: game.ontable, deck: game.deck, inprogress: 0}
+      });
+    }, Math.floor(Math.random() * 1000) + 1000);
   }
 
   whochoose() {
@@ -478,6 +493,7 @@ export default class GameBoard extends Component {
         </div>
         <div>
           <button type="button" onClick={this.handleDeal.bind(this)} disabled={this.dealbutton()}>Deal</button>
+          <button onClick={this.refresh.bind(this)}>Refresh</button>
           <button onClick={this.handleBackToGameList.bind(this)}>Forfeit</button>
           <input type="checkbox" id="areyousure"/>
           <label htmlFor="areyousure">Confirm</label>
