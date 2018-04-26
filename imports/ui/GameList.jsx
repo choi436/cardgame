@@ -50,6 +50,7 @@ export default class GameList extends Component {
 
   renderPlayers(game) {
     if (game.winning != 0) {return (<span>Finished game</span>)}
+    if (game.ruined != 0) {return (<span>Abandoned game</span>)}
     if (game.playerOne != null && game.playerTwo == null) {
       if (game.playerOne.username == this.props.user.username) {
         return (<span>Waiting for players...</span>)
@@ -94,12 +95,12 @@ export default class GameList extends Component {
                 ): null}
 
   {/* can join only if user is not in any game, and the game is not started */}
-                {this.myCurrentGameId() === null && game.playerTwo == null && game.winning == 0? (
+                {this.myCurrentGameId() === null && game.playerTwo == null && game.ruined == 0? (
                   <button onClick={this.handleJoinGame.bind(this, game._id)}>Join</button>
                 ): null}
 
   {/* can enter only if the game is started */}
-                {game.playerTwo != null? (
+                {game.playerTwo != null && game.ruined == 0? (
                   <button onClick={this.handleEnterGame.bind(this, game._id)}>Enter</button>
                 ): null}
               </div>

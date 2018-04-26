@@ -33,7 +33,8 @@ _.extend(Games, {
       deck: deck,
       playerOne: null,
       playerTwo: null,
-      winning: 0
+      winning: 0,
+      ruined: 0
     };
     let gameId = Games.insert(gameDoc); // insert a new game document into the collection
     return gameId;
@@ -73,7 +74,7 @@ _.extend(Games, {
       game.playerTwo = null;
     }
     Games.update(game._id, {
-      $set: {playerOne: game.playerOne, playerTwo: game.playerTwo}
+      $set: {playerOne: game.playerOne, playerTwo: game.playerTwo, ruined: 1}
     });
     if (game.playerOne == null && game.playerTwo == null) {
       Games.remove(game._id);

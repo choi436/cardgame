@@ -417,7 +417,7 @@ export default class GameBoard extends Component {
 
   dealbutton() {
     if (this.props.game.winning != 0) return true;
-    if (this.props.user.username == this.props.game.playerOne.username) {
+    if (this.isthisone()) {
       return (this.props.game.oneDeal == 1);
     } else {
       return (this.props.game.twoDeal == 1);
